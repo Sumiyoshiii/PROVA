@@ -1,0 +1,141 @@
+CREATE TABLE aeronaves (
+id SERIAL PRIMARY KEY,
+modelo varchar(100) NOT NULL,
+codigo_cauda varchar(10) UNIQUE NOT NULL,
+capacidade INT NOT NULL CHECK (capacidade > 0)
+);
+
+CREATE TABLE pilotos (
+id SERIAL PRIMARY KEY,
+nome varchar (100) NOT NULL,
+codigo_anac varchar(6) UNIQUE NOT NULL,
+horas_voo INT DEFAULT 0 CHECK(horas_voo >= 0)
+);
+
+CREATE TABLE voos (
+id SERIAL PRIMARY KEY,
+aeronave_id INT NOT NULL,
+constraint fk_aeronaves_voos
+foreign key (aeronave_id)
+references aeronaves(id),
+piloto_id INT NOT NULL,
+constraint fk_pilotos_voos
+foreign key (piloto_id)
+references pilotos(id),
+numero_voo varchar(20) NOT NULL,
+origem varchar (50) NOT NULL,
+destino varchar (50) NOT NULL,
+data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+status varchar(20) DEFAULT 'Agendado'
+	CHECK (status IN ('Agendado', 'Em Voo', 'Concluido','Cancelado'))
+);
+
+CREATE TABLE passageiros (
+id SERIAL PRIMARY KEY,
+nome varchar(100) NOT NULL,
+cpf varchar(11) UNIQUE NOT NULL,
+email varchar(150) UNIQUE NOT NULL
+);
+
+CREATE TABLE passagens (
+id SERIAL PRIMARY KEY,
+voo_id INT NOT NULL,
+constraint fk_voos_passagem
+foreign key (voo_id)
+references voos(id),
+passageiro_id INT NOT NULL,
+constraint fk_passageiros_passagem
+foreign key (passageiro_id)
+references passageiros(id),
+assento varchar(4) NOT NULL,
+classe varchar(20) DEFAULT 'Economica'
+	CHECK (classe IN ('Economica', 'Executiva')),
+valor DECIMAL(10,2) NOT NULL CHECK (valor > 0)
+);
+
+INSERT INTO aeronaves (modelo, codigo_cauda, capacidade) VALUES
+('picaplana97','COC-069','250'),
+('boeing847','TGT-847','400'),
+('jatoney','NEY-010','50'),
+('azulpro','AZL-190','300'),
+('stanley911','STL-911','350');
+
+INSERT INTO pilotos (nome, codigo_anac, horas_voo) VALUES
+('Joao Marcos','753948','359'),
+('Lucas Almeida','438508','279'),
+('Arthur de Guimarães','029485','127'),
+('Wanderley Dias','947284','1304'),
+('João barbosa','573985','456');
+
+INSERT INTO passageiros (nome, cpf, email) VALUES
+('Murillo Lima','29859483958','murillo@email.com'),
+('Pedro Varago','45018875932','varago@email.com'),
+('Matheus Sumiyoshi','23485921849','sumiyoshi@email.com'),
+('Daniel Araujo','39439427403','namoradodalarissa@email.com'),
+('Eduardo Zago','19485039720','betaebeta@email.com');
+
+INSERT INTO voos (aeronave_id,piloto_id,numero_voo,origem,destino,data_hora,status) VALUES
+('1','1','326','Brasilia','São Paulo','10-10-2026 13:00:00','Agendado'),
+('2','2','480','São jose','Umuarama','03-10-2026 20:00:00','Cancelado'),
+('3','3','847','Florianopólis','Rio De Janeiro','02-10-2026 10:00:00','Em Voo'),
+('4','4','375','São Paulo','Paraguai','28-09-2026 8:00:00','Concluido'),
+('5','5','928','São Paulo','Portugal','19-10-2026 22:00:00','Agendado');
+
+INSERT INTO passagens (voo_id,passageiro_id,assento,classe,valor) VALUES
+('1','1','15B','Executiva','499.99'),
+('2','2','49A','Economica','299.99'),
+('3','3','19A','Economica','649.99'),
+('4','4','37B','Executiva','899.99'),
+('5','5','9A','Executiva','1799.99');
+
+Q1
+
+SELECT 
+    v.numero_voo,
+    v.origem,
+    v.destino,
+    a.modelo,
+    p.nome AS piloto
+FROM voos v
+JOIN aeronaves a ON v.aeronave_id = a.id
+JOIN pilotos p ON v.piloto_id = p.id
+WHERE v.status IN ('Agendado', 'Em Voo');
+
+Q2
+
+SELECT 
+    classe,
+    SUM(valor) AS total_arrecadado
+FROM passagens
+GROUP BY classe;
+
+Q3
+
+SELECT 
+    p.nome AS passageiro,
+    v.numero_voo,
+    pa.assento,
+    pa.valor
+FROM passagens pa
+JOIN passageiros p ON pa.passageiro_id = p.id
+JOIN voos v ON pa.voo_id = v.id
+WHERE pa.classe = 'Executiva'
+  AND pa.valor > 500;
+
+View1
+
+CREATE VIEW vw_painel_aeroporto AS
+SELECT
+    v.numero_voo,
+    v.data_hora,
+    v.origem,
+    v.destino,
+    a.modelo,
+    a.codigo_cauda,
+    v.status
+FROM voos v
+JOIN aeronaves a ON v.aeronave_id = a.id;
+
+View2
+
+nn consegui
